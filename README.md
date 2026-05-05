@@ -18,7 +18,7 @@ _Один HTML-файл. Никаких зависимостей. Работае
 
 <div align="center">
 
-### [▶️ Открыть VELANTRIM EITI](https://velantrian.github.io/Velan-Eiti-4/)
+### [▶️ Открыть VELANTRIM EITI](https://velantrian.github.io/Velantrim-Eiti-4/)
 
 **📱 На телефоне:** открой ссылку в Chrome → меню (⋮) → «Добавить на главный экран»
 
@@ -30,7 +30,7 @@ _Один HTML-файл. Никаких зависимостей. Работае
 
 ## ⬇️ Скачать локально
 
-**[→ Скачать index.html](https://raw.githubusercontent.com/velantrian/Velan-Eiti-4/main/index.html)**  
+**[→ Скачать index.html](https://raw.githubusercontent.com/velantrian/Velantrim-Eiti-4/main/index.html)**  
 _(правой кнопкой → Сохранить как)_
 
 Открой скачанный файл в браузере — всё работает без сервера и интернета.
@@ -168,6 +168,6 @@ eitiKBSetTruth(id, 'hypothesis') // эпистемический статус
 
 _Сделано с 🖤 для тех, кто строит своё AI_
 
-[🚀 Открыть](https://velantrian.github.io/Velan-Eiti-4/) · [⬇️ Скачать](https://raw.githubusercontent.com/velantrian/Velan-Eiti-4/main/index.html) · [🐛 Issues](https://github.com/velantrian/Velan-Eiti-4/issues)
+[🚀 Открыть](https://velantrian.github.io/Velantrim-Eiti-4/) · [⬇️ Скачать](https://raw.githubusercontent.com/velantrian/Velantrim-Eiti-4/main/index.html) · [🐛 Issues](https://github.com/velantrian/Velantrim-Eiti-4/issues)
 
 </div>

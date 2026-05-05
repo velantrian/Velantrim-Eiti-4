@@ -5,7 +5,7 @@
   "description": "Персональная система знаний и AI-ассистент",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#2b1e16",
   "orientation": "portrait-primary",
@@ -46,9 +46,8 @@
     "scope": "./"
   },
   "display_override": [
-    "window-controls-overlay",
-    "fullscreen",
     "standalone",
+    "window-controls-overlay",
     "minimal-ui"
   ]
 }

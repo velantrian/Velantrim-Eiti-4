@@ -2676,6 +2676,28 @@
         .settings-btn:active {
             transform: scale(0.97);
         }
+
+        /* ── Memory Emoji Popup v12.9.46 ── */
+        @keyframes slideUpPop {
+            from { opacity:0; transform:translateY(24px) scale(0.96); }
+            to   { opacity:1; transform:translateY(0)    scale(1);    }
+        }
+        .mem-emoji-chip {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            padding:5px 10px;
+            border-radius:20px;
+            background:rgba(255,215,0,0.12);
+            border:1px solid rgba(255,215,0,0.25);
+            font-size:13px;
+            font-weight:500;
+            color:var(--text-color);
+            white-space:nowrap;
+            max-width:160px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
 </style>
 </head>
 <body class="theme-ios6-leather">
@@ -2788,6 +2810,28 @@
             <!-- SETTINGS -->
             <div id="view-settings" class="content-view" style="overflow-y:auto;-webkit-overflow-scrolling:touch;">
                 <div class="settings-container">
+                    <!-- ═══ ЭКРАН v12.9.46 ═══ -->
+                    <div class="settings-group" id="settings-group-screen">
+                        <div class="settings-title">📱 Экран</div>
+                        <div style="padding:14px 16px 16px;">
+                            <button id="eiti-fs-btn" onclick="eitiToggleFullscreen()"
+                                style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px solid rgba(255,215,0,0.35);background:linear-gradient(145deg,rgba(43,30,22,0.95),rgba(26,15,8,0.98));color:var(--text-color);cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);transition:transform 0.12s ease,box-shadow 0.12s ease;text-align:left;"
+                                onpointerdown="this.style.transform='scale(0.97)'"
+                                onpointerup="this.style.transform=''"
+                                onpointercancel="this.style.transform=''">
+                                <span class="eiti-fs-icon" style="font-size:26px;line-height:1;flex-shrink:0;">⊡</span>
+                                <div style="flex:1;min-width:0;">
+                                    <div class="eiti-fs-label" style="font-size:15px;font-weight:700;letter-spacing:0.2px;">Полный экран</div>
+                                    <div style="font-size:11px;opacity:0.5;margin-top:2px;line-height:1.4;">Скрыть статус-бар и панель навигации</div>
+                                </div>
+                                <span class="eiti-fs-badge" style="font-size:11px;font-weight:700;letter-spacing:0.8px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.5);flex-shrink:0;transition:background 0.2s,color 0.2s;">ВЫКЛ</span>
+                            </button>
+                            <div style="font-size:11px;opacity:0.4;margin-top:10px;line-height:1.6;padding:0 4px;">
+                                После установки приложение показывает системные панели устройства (часы, батарея, навигация). Нажми для переключения в полный экран — настройка сохраняется.
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="settings-group">
                         <div class="settings-title">Внешний вид</div>
                         <div class="settings-item" onclick="openDesignMode()" style="cursor:pointer">
@@ -6750,8 +6794,63 @@
                 }
             }, { passive: true });
         })();
-    
-        
+
+        // ── Fullscreen toggle v12.9.46 (standalone PWA) ─────────────────────
+        function eitiUpdateFullscreenBtn() {
+            var btn = document.getElementById('eiti-fs-btn');
+            if (!btn) return;
+            var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            var icon  = btn.querySelector('.eiti-fs-icon');
+            var label = btn.querySelector('.eiti-fs-label');
+            var badge = btn.querySelector('.eiti-fs-badge');
+            if (icon)  icon.textContent  = isFs ? '⛶' : '⊡';
+            if (label) label.textContent = isFs ? 'Выйти из полного экрана' : 'Полный экран';
+            if (badge) {
+                badge.textContent = isFs ? 'ВКЛ' : 'ВЫКЛ';
+                badge.style.background = isFs ? 'rgba(255,215,0,0.22)' : 'rgba(255,255,255,0.10)';
+                badge.style.color      = isFs ? '#ffd700' : 'rgba(255,255,255,0.5)';
+            }
+        }
+
+        function eitiToggleFullscreen() {
+            // iOS Safari не поддерживает Fullscreen API — показываем подсказку
+            if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) {
+                showToast('ℹ️ На iOS полный экран доступен только при установке приложения');
+                return;
+            }
+            var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            try {
+                if (isFs) {
+                    var exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+                    if (exitFn) exitFn.call(document);
+                } else {
+                    var el = document.documentElement;
+                    var reqFn = el.requestFullscreen || el.webkitRequestFullscreen;
+                    if (reqFn) reqFn.call(el);
+                }
+                localStorage.setItem('eiti_fullscreen_pref', isFs ? '0' : '1');
+            } catch(e) {
+                showToast('⚠️ Полный экран недоступен в этом браузере');
+            }
+        }
+
+        document.addEventListener('fullscreenchange', eitiUpdateFullscreenBtn);
+        document.addEventListener('webkitfullscreenchange', eitiUpdateFullscreenBtn);
+
+        // Восстановление fullscreen-режима при старте (только в standalone PWA)
+        (function() {
+            if (window.matchMedia('(display-mode: standalone)').matches
+                    && localStorage.getItem('eiti_fullscreen_pref') === '1') {
+                setTimeout(function() {
+                    try {
+                        var el = document.documentElement;
+                        var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+                        if (fn) fn.call(el).catch(function(){});
+                    } catch(e) {}
+                }, 1500);
+            }
+        })();
+
         // ✅ FIX: плавный уход splash (нет резкого белого мигания)
         window.onerror = function(msg, src, line, col, err) {
             console.error('[v8 GLOBAL ERROR]', msg, '|', src, 'L' + line, err);
@@ -8038,7 +8137,104 @@
             document.body.appendChild(toast);
             setTimeout(function() { if (toast.parentNode) toast.remove(); }, 2000);
         }
-        
+
+        // ── Memory Emoji Popup v12.9.46 ──────────────────────────────────────
+        // Полностью оффлайн — keyword matching через eitiStemWord (лемматизатор)
+        // Работает на русском и английском (латинских) языках
+        var _memEmojiRules = [
+            { stems: ['имя','звать','назыв','имени','имен'],         en: ['name','named','call'],              emoji: '👤', label: 'Имя' },
+            { stems: ['возраст','лет','год','года'],                  en: ['age','aged','years','old'],          emoji: '📅', label: 'Возраст' },
+            { stems: ['родить','рождени','рождения','рождение'],      en: ['born','birth','birthday'],           emoji: '🎂', label: 'День рождения' },
+            { stems: ['дет','ребенок','ребёнок','сын','дочь','дочк'], en: ['child','children','son','daughter','kid','kids'], emoji: '👨‍👧‍👦', label: 'Дети' },
+            { stems: ['город','живу','живет','проживает','проживаю'], en: ['city','town','live','lives','living'], emoji: '🏙️', label: 'Город' },
+            { stems: ['страна','родина','гражданств'],                en: ['country','nation','citizenship'],    emoji: '🌍', label: 'Страна' },
+            { stems: ['работ','профессия','должность','занимаюся','занимаюс'], en: ['work','job','profession','career','occupation'], emoji: '💼', label: 'Работа' },
+            { stems: ['хобби','увлечен','интерес','любить','нравиться'], en: ['hobby','hobbies','interest','like','enjoy','passion'], emoji: '🎯', label: 'Хобби' },
+            { stems: ['язык','говорить','владеет','владею'],          en: ['language','speak','speaks','fluent'], emoji: '🗣️', label: 'Язык' },
+            { stems: ['кошк','кот','собак','питомец','животн'],       en: ['cat','dog','pet','pets','animal'],   emoji: '🐾', label: 'Питомец' },
+            { stems: ['здоровь','болезн','лечени','диагноз'],         en: ['health','ill','sick','disease','medical'], emoji: '🏥', label: 'Здоровье' },
+            { stems: ['учеб','образовани','универ','школ','учится'],  en: ['school','university','study','education','degree'], emoji: '🎓', label: 'Образование' },
+            { stems: ['цель','план','мечта','хочу','стремлюсь'],      en: ['goal','plan','dream','want','wish'],  emoji: '🎯', label: 'Цели' }
+        ];
+
+        function _memStemText(text) {
+            // Токенизируем и стемматизируем; возвращаем Set стемов
+            var stems = new Set();
+            var words = text.toLowerCase().replace(/ё/g, 'е').split(/[\s,\.;:!\?\-–—()\[\]«»"']+/);
+            words.forEach(function(w) {
+                if (!w || w.length < 2) return;
+                stems.add(w); // исходное слово
+                if (typeof eitiStemWord === 'function') stems.add(eitiStemWord(w));
+                // Первые 4+ символа как мини-стем для покрытия падежей без словаря
+                if (w.length >= 4) stems.add(w.slice(0, 4));
+                if (w.length >= 5) stems.add(w.slice(0, 5));
+            });
+            return stems;
+        }
+
+        function showMemEmojiPopup(textOrTexts) {
+            var combined = Array.isArray(textOrTexts) ? textOrTexts.join(' ') : String(textOrTexts || '');
+            if (!combined.trim()) { showToast('🧠 EITI Memory: сохранено'); return; }
+            var wordStems = _memStemText(combined);
+
+            var chips = [];
+            var seenEmojis = {};
+            _memEmojiRules.forEach(function(rule) {
+                if (seenEmojis[rule.emoji]) return; // не дублируем один emoji
+                // Проверка русских стемов
+                var ruMatch = rule.stems.some(function(s) {
+                    // точное вхождение стема из правила в набор стемов текста
+                    if (wordStems.has(s)) return true;
+                    // или подстрока (для покрытия неполных форм)
+                    var lower = combined.toLowerCase().replace(/ё/g, 'е');
+                    return lower.indexOf(s) !== -1;
+                });
+                // Проверка английских ключевых слов
+                var enMatch = !ruMatch && rule.en && rule.en.some(function(k) {
+                    return wordStems.has(k) || combined.toLowerCase().indexOf(k) !== -1;
+                });
+                if (ruMatch || enMatch) {
+                    chips.push(rule);
+                    seenEmojis[rule.emoji] = true;
+                }
+            });
+
+            if (chips.length === 0) {
+                showToast('🧠 EITI Memory: сохранено');
+                return;
+            }
+
+            var old = document.getElementById('eiti-mem-emoji-popup');
+            if (old) old.remove();
+
+            var popup = document.createElement('div');
+            popup.id = 'eiti-mem-emoji-popup';
+            popup.style.cssText = 'position:fixed;bottom:calc(var(--tab-bar-height,64px) + 56px);left:10px;right:10px;z-index:19999;background:rgba(20,18,28,0.97);border:1.5px solid rgba(255,215,0,0.5);border-radius:18px;padding:14px 14px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 0 1px rgba(255,215,0,0.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:slideUpPop 0.28s cubic-bezier(0.34,1.56,0.64,1) both;';
+
+            var chipHtml = chips.slice(0, 5).map(function(c) {
+                return '<span class="mem-emoji-chip">' + c.emoji + ' ' + c.label + '</span>';
+            }).join('');
+
+            popup.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+              +   '<span style="font-size:14px;font-weight:700;color:#ffd700;letter-spacing:0.2px;">🧠 Сохранено в память</span>'
+              +   '<button onclick="(function(){var p=document.getElementById(\'eiti-mem-emoji-popup\');if(p){clearTimeout(p._dt);p.remove();}})()" '
+              +     'style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;line-height:1;cursor:pointer;padding:0 2px;flex-shrink:0;">×</button>'
+              + '</div>'
+              + '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + chipHtml + '</div>';
+
+            document.body.appendChild(popup);
+
+            popup._dt = setTimeout(function() {
+                var p = document.getElementById('eiti-mem-emoji-popup');
+                if (!p) return;
+                p.style.transition = 'opacity 0.3s ease,transform 0.3s ease';
+                p.style.opacity = '0';
+                p.style.transform = 'translateY(12px)';
+                setTimeout(function() { var p2 = document.getElementById('eiti-mem-emoji-popup'); if (p2) p2.remove(); }, 300);
+            }, 4000);
+        }
+
         // okLabel — текст кнопки подтверждения (по умолчанию 'ОК')
         // okDanger — true = красная кнопка (для деструктивных действий), false = акцентная золотая
         // onCancel — опциональный callback при нажатии Отмена
@@ -22051,7 +22247,12 @@ window.eitiLLMClearAll = async function() {
                 if (rec) {
                     txtEl.value = ''; if(tagEl) tagEl.value = '';
                     eitiMemRefreshUI();
-                    showToast('✅ Запись добавлена в EITI Memory');
+                    // v12.9.46: emoji popup
+                    if (typeof showMemEmojiPopup === 'function') {
+                        showMemEmojiPopup(txt);
+                    } else {
+                        showToast('✅ Запись добавлена в EITI Memory');
+                    }
                 }
             });
         }
@@ -22301,7 +22502,13 @@ window.eitiLLMClearAll = async function() {
             }
             if (saved > 0) {
                 setTimeout(function(){ eitiMemRefreshUI(); }, 300);
-                showToast('\uD83E\uDDE0 EITI Memory: сохранено ' + saved + ' запис' + (saved===1?'ь':'и'));
+                // v12.9.46: emoji popup — collect all saved texts from this call
+                var _savedTextsArr = Array.from(_savedTextsThisCall);
+                if (typeof showMemEmojiPopup === 'function' && _savedTextsArr.length > 0) {
+                    showMemEmojiPopup(_savedTextsArr.join(' '));
+                } else {
+                    showToast('\uD83E\uDDE0 EITI Memory: сохранено ' + saved + ' запис' + (saved===1?'ь':'и'));
+                }
             }
             return text
                 .replace(/\[MEM_ADD(?::[^\]]+)?\]/g, '')
